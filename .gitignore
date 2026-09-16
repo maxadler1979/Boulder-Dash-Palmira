@@ -1,0 +1,15 @@
+# z88dk / сборка
+a.bin
+a.map
+a.rkr
+zcc_opt.def
+*.o
+*.obj
+blddash.rkl
+
+# IDE и бэкапы
+.idea/
+*.bak
+*.preopt
+*~
+_merge_sprites.py
