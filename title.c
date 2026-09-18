@@ -632,13 +632,12 @@ uint8_t i = 0;  // ������ ��� �����������
         uint8_t ascii_code = (uint8_t)text[i];
          if (ascii_code==32) {put_sprite(x, y, space);x+=4;}
          if (ascii_code==':') {put_sprite(x, y, l_dd);x+=4;}
-        // ���������, �������� �� ������ ������ �������� �������� ('A'-'Z')
         if (ascii_code >= 'A' && ascii_code <= 'Z') {
-            // ������� ��������������� ������ �����
             put_sprite(x, y, Letters[ascii_code - 'A']);
-            
-            // ������� ������� ��� ��������� �����
-            x += 4;  // �����������, ��� ������ ������� ����� 4 ��������
+            x += 4;
+        } else if (ascii_code >= 'a' && ascii_code <= 'z') {
+            put_sprite(x, y, Letters[ascii_code - 'a']);
+            x += 4;
         }
         
         // ��������� � ���������� �������
@@ -846,18 +845,19 @@ static void title_draw_full(void) {
     uchar t, x;
     clrscr();  // clear entire screen (demo graphics, HUD, etc.)
     symbol = BG_CHAR;   // the window is laid down in one code; the glyph animates
-    // Redraw border (may be corrupted by demo game rendering)
-    for (t = 0; t < 71; t++) {
+    // Redraw border (may be corrupted by demo game rendering).
+    // Рамка сдвинута +4 вправо — иначе хвост ORIGINAL (x=64..66) лезет в бордюр.
+    for (t = 4; t < 75; t++) {
         put_char(t, 1, 63);
         put_char(t, 2, 63);
         put_char(t, 26, 63);
         put_char(t, 27, 63);
     }
     for (t = 1; t < 27; t++) {
-        put_char(0, t, 63);
-        put_char(1, t + 1, 63);
-        put_char(69, t, 63);
-        put_char(70, t + 1, 63);
+        put_char(4, t, 63);
+        put_char(5, t + 1, 63);
+        put_char(73, t, 63);
+        put_char(74, t + 1, 63);
     }
     fill_bd_window();
     x = 8;
@@ -873,25 +873,25 @@ static void title_draw_full(void) {
     put_sprite(x+=10,16, a_let);
     put_sprite(x+=8,16, s_let);
     put_sprite(x+=8,16, h_let);
-    /* авторы (как на РК); спрайты только A–Z — без (C)/цифр */
-    printf_letters(5, 23, "LIEPA AND GRAY");
-    show_big_dig(28,34,2026);
-    printf_letters(4,28,  brand_decode(brand_palmira_enc, 17, BRAND_KEY_PALMIRA));
-    printf_letters(20,31, brand_decode(brand_software_enc, 9, BRAND_KEY_SOFTWARE));
-    printf_letters(14,37, "PRESS SPACE");
+    /* +4 от левого края рамки (ещё пол шага); сетка blank = 8,12,… */
+    printf_letters(8,28,  brand_decode(brand_palmira_enc, 17, BRAND_KEY_PALMIRA));
+    printf_letters(12,31, brand_decode(brand_software_enc, 9, BRAND_KEY_SOFTWARE));
+    show_big_dig(48,31,2026);                 /* SOFTWARE + пробел + год */
+    printf_letters(12,34, "LIEPA and GRAY");
+    printf_letters(16,37, "PRESS SPACE");
 }
 
 // ============================================================
-// The four text lines under the logo (y = 27/30/33/36) are shared by the
-// title, the score screen and the cave menu.  Each of them wipes the whole
-// span first instead of relying on the next screen being at least as wide;
-// x = 4..67 is everything any of them draws into.
+// The four text lines under the logo are shared by the title, the score
+// screen and the cave menu. Wipe the full glyph span first.
+// PALMIRA ORIGINAL ends at x=68 (последняя L) — blank обязан её покрыть.
 // ============================================================
 static void title_blank_text_lines(void) {
-    printf_letters(4,28, "                ");
-    printf_letters(4,31, "                ");
-    printf_letters(4,34, "                ");
-    printf_letters(4,37, "                ");
+    /* 16*4 с x=8 → до x=68 (L от ORIGINAL); внутри рамки */
+    printf_letters(8,28, "                ");
+    printf_letters(8,31, "                ");
+    printf_letters(8,34, "                ");
+    printf_letters(8,37, "                ");
 }
 
 // Six score digits, leading zeros kept as on the C64 (.000000.high.000000.)
@@ -910,10 +910,10 @@ static void draw_score6(uchar x, uchar y, unsigned char *d) {
 // ============================================================
 static void title_draw_scores(void) {
     title_blank_text_lines();
-    printf_letters(16,28, "HIGH SCORE");
-    draw_score6(24,31, high_score);
-    printf_letters(16,34, "LAST SCORE");
-    draw_score6(24,37, last_score);
+    printf_letters(18,28, "HIGH SCORE");
+    draw_score6(26,31, high_score);
+    printf_letters(18,34, "LAST SCORE");
+    draw_score6(26,37, last_score);
 }
 
 // ============================================================
@@ -922,9 +922,9 @@ static void title_draw_scores(void) {
 // ============================================================
 static void title_draw_cave_select(void) {
     title_blank_text_lines();
-    printf_letters(4,28,  " ARROWS SELECT  ");
-    printf_letters(20,31, "CAVE:   ");
-    printf_letters(6,37, "SPACE TO START  ");
+    printf_letters(8,28,  " ARROWS SELECT  ");
+    printf_letters(24,31, "CAVE:   ");
+    printf_letters(10,37, "SPACE TO START  ");
 }
 
 // ============================================================
@@ -962,7 +962,7 @@ static unsigned char title_music_loop(unsigned char phase) {
             // Cave selection: UP/DOWN — только A–P (бонусы Q–T не выбираются)
             if (!(key_scan(0xfd) & 0x20)) { if (cave < 15) cave++; }
             if (!(key_scan(0xfd) & 0x80)) { if (cave > 0)  cave--; }
-            put_sprite(46, 31, Letters[cave]);
+            put_sprite(50, 31, Letters[cave]);
         }
 
         // Hold the note out, polling SPACE every frame, and step the pattern
@@ -1723,7 +1723,7 @@ void show_title(void)
 void fill_bd_window(void)
 {
 #asm
-        LXI H,0A788H
+        LXI H,0A78CH
         MVI A,67
         LXI D, 79
         CMA
