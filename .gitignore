@@ -5,12 +5,22 @@ a.rkr
 zcc_opt.def
 *.o
 *.obj
-blddash.rkl
-blddash.rkr
-blddash.rk
-blddash.rka
 tbl.bin
 *.rar
+
+# артефакты рядом с исходниками (релиз лежит в bin/)
+/blddash.rkl
+/blddash.rkr
+/blddash.rk
+/blddash.rka
+RK86/blddash.rkl
+RK86/blddash.rkr
+RK86/blddash.rk
+RK86/blddash.rka
+Apogee/blddash.rkl
+Apogee/blddash.rkr
+Apogee/blddash.rk
+Apogee/blddash.rka
 
 # IDE и бэкапы
 .idea/

@@ -17,7 +17,7 @@ zcc +radio86 main.c bd_levels.c caves_zx.c game_logic.c rockford.c text_util.c s
 python make_rkl.py
 ```
 
-`compile.bat` делает и то и другое. Результат: `blddash.rkl` → загрузить в Emu80 (платформа Радио-86РК).
+`compile.bat` делает и то и другое. Результат: `bin/blddash.rkl` → загрузить в Emu80 (платформа Радио-86РК / Пальмира).
 
 ## Карта памяти и жёсткий лимит
 

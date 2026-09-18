@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-make_rk.py — упаковка a.bin в blddash.rkr для штатного Радио-86РК / Emu80.
+make_rk.py — упаковка a.bin в bin/blddash.rkr для штатного Радио-86РК / Emu80.
 
 Формат тот же, что zcc +radio86 -create-app (z88dk appmake +rkx --rkr):
   [start_hi][start_lo][end_hi][end_lo][data, выровненные до чётной длины][xor][0]
@@ -11,13 +11,18 @@ make_rk.py — упаковка a.bin в blddash.rkr для штатного Р�
 import os
 import sys
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+BIN_DIR = os.path.join(HERE, "..", "bin")
+OUT_NAME = os.path.join(BIN_DIR, "blddash.rkr")
+
 
 def main():
-    if not os.path.exists("a.bin"):
+    abin = os.path.join(HERE, "a.bin")
+    if not os.path.exists(abin):
         print("ERROR: a.bin not found. Run compile first.")
         sys.exit(1)
 
-    data = open("a.bin", "rb").read()
+    data = open(abin, "rb").read()
     if len(data) == 0:
         print("ERROR: a.bin is empty")
         sys.exit(1)
@@ -42,9 +47,10 @@ def main():
     out.append(chkh)
     out.append(0)
 
-    open("blddash.rkr", "wb").write(out)
-    print(f"a.bin: {len(open('a.bin','rb').read())} bytes, start=0x{start:04X}, end=0x{end:04X}")
-    print(f"blddash.rkr: {len(out)} bytes written")
+    os.makedirs(BIN_DIR, exist_ok=True)
+    open(OUT_NAME, "wb").write(out)
+    print(f"a.bin: {len(open(abin, 'rb').read())} bytes, start=0x{start:04X}, end=0x{end:04X}")
+    print(f"{OUT_NAME}: {len(out)} bytes written")
 
 
 if __name__ == "__main__":

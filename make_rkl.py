@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
 make_rkl.py — Python-версия -make-rka.js
-Упаковывает a.bin в blddash.rkl (формат загрузки РК86).
+Упаковывает a.bin в bin/blddash.rkl (формат загрузки Пальмиры).
 Формат: [start_hi][start_lo][end_hi][end_lo][data][0][0][0][0xE6][crc_hi][crc_lo]
 Все байты (кроме data) кодируются через tbl.bin.
 """
 
 import sys
 import os
+
+ROOT = os.path.dirname(os.path.abspath(__file__))
+BIN_DIR = os.path.join(ROOT, "bin")
+OUT_NAME = os.path.join(BIN_DIR, "blddash.rkl")
 
 def load_all(name):
     with open(name, 'rb') as f:
@@ -26,7 +30,7 @@ def apogey_sum(data, decode):
 
 def main():
     # Загружаем таблицу кодирования
-    tbl = load_all("tbl.bin")
+    tbl = load_all(os.path.join(ROOT, "tbl.bin"))
     if len(tbl) != 256:
         print(f"ERROR: tbl.bin size is {len(tbl)}, expected 256")
         sys.exit(1)
@@ -38,11 +42,12 @@ def main():
         decode[encode[i]] = i
 
     # Загружаем скомпилированный бинарник
-    if not os.path.exists("a.bin"):
+    abin = os.path.join(ROOT, "a.bin")
+    if not os.path.exists(abin):
         print("ERROR: a.bin not found. Run compile first.")
         sys.exit(1)
 
-    data = load_all("a.bin")
+    data = load_all(abin)
     if len(data) == 0:
         print("ERROR: a.bin is empty")
         sys.exit(1)
@@ -67,8 +72,9 @@ def main():
     out.append(encode[crc >> 8])
     out.append(encode[crc & 0xFF])
 
-    save("blddash.rkl", bytes(out))
-    print(f"blddash.rkl: {len(out)} bytes written")
+    os.makedirs(BIN_DIR, exist_ok=True)
+    save(OUT_NAME, bytes(out))
+    print(f"{OUT_NAME}: {len(out)} bytes written")
 
 if __name__ == '__main__':
     main()

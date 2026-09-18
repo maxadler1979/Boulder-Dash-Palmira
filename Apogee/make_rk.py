@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-make_rk.py — упаковка a.bin в blddash.rka для Апогей БК-01 / Emu80.
+make_rk.py — упаковка a.bin в bin/blddash.rka для Апогей БК-01 / Emu80.
 
 Формат как у РК (start/end + data + xor), расширение .rka:
   [start_hi][start_lo][end_hi][end_lo][data…][xor][0]
@@ -9,13 +9,18 @@ make_rk.py — упаковка a.bin в blddash.rka для Апогей БК-01
 import os
 import sys
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+BIN_DIR = os.path.join(HERE, "..", "bin")
+OUT_NAME = os.path.join(BIN_DIR, "blddash.rka")
+
 
 def main():
-    if not os.path.exists("a.bin"):
+    abin = os.path.join(HERE, "a.bin")
+    if not os.path.exists(abin):
         print("ERROR: a.bin not found. Run compile first.")
         sys.exit(1)
 
-    data = open("a.bin", "rb").read()
+    data = open(abin, "rb").read()
     if len(data) == 0:
         print("ERROR: a.bin is empty")
         sys.exit(1)
@@ -40,9 +45,10 @@ def main():
     out.append(chkh)
     out.append(0)
 
-    open("blddash.rka", "wb").write(out)
-    print(f"a.bin: {len(open('a.bin','rb').read())} bytes, start=0x{start:04X}, end=0x{end:04X}")
-    print(f"blddash.rka: {len(out)} bytes written")
+    os.makedirs(BIN_DIR, exist_ok=True)
+    open(OUT_NAME, "wb").write(out)
+    print(f"a.bin: {len(open(abin, 'rb').read())} bytes, start=0x{start:04X}, end=0x{end:04X}")
+    print(f"{OUT_NAME}: {len(out)} bytes written")
 
 
 if __name__ == "__main__":
