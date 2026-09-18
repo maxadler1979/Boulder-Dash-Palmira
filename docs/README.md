@@ -23,7 +23,7 @@ zcc +radio86 main.c bd_levels.c caves_zx.c game_logic.c rockford.c text_util.c s
 python make_rkl.py
 ```
 
-Результат: `blddash.rkl` — загрузить в Emu80 (платформа Радио-86РК).
+Результат: `bin/blddash.rkl` — загрузить в Emu80 (платформа Радио-86РК / Пальмира).
 
 **Лимит:** `a.bin` не должен превышать **42300 байт**. Код растёт от `0x0000`;
 за `0xA5FF` начинается видеопамять. После любой добавки: `wc -c a.bin`.
