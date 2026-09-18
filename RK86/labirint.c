@@ -3,11 +3,11 @@
 #include "main.h"
 
 /*
- * labirint.c — рендер окна 12x10 клеток.
+ * labirint.c — рендер окна WIN_W x WIN_H (11x8) клеток.
  *
- * MapObj[код] -> спрайт 12x12. sprites_anim() каждый тик переписывает
+ * MapObj[код] -> спрайт 6x4 знакоместа. sprites_anim() каждый тик переписывает
  * указатели анимированных кодов. show_window() сравнивает клетку карты
- * с теневым массивом shadow[120] и блитует только изменившиеся
+ * с теневым массивом shadow[WIN_CELLS] и блитует только изменившиеся
  * (для анимированных shadow хранит 0xFF — «всегда грязная»).
  */
 
@@ -104,9 +104,7 @@ void init_empt_spark_anim(void)
 
 uint8_t map_offsety;
 uint8_t map_offsetx;
-// NOTE: get_sprites_adresses_from_mass() fills 11 rows x 12 = 132 entries
-// (the renderer only uses the first 120) - sized 132 so it cannot overrun.
-uint16_t screen_adresses[132];
+uint16_t screen_adresses[WIN_CELLS];
 char i,j;
 int lab_ptr;
 uint8_t lab_adr;
@@ -250,7 +248,7 @@ sa_rf_set:
             LXI  H,_dimond_pointer
             INR  M
             MOV  A,M
-            CPI  09h
+            CPI  06h
             JNZ  sa_dp_ok
             MVI  M,0
 sa_dp_ok:
@@ -342,7 +340,7 @@ AC = 4
 
 
 // ============================================================
-// Dirty-cell рендер окна 12x10 (v2).
+// Dirty-cell рендер окна 11x8 (WIN_W x WIN_H).
 //
 // shadow[слот] хранит код объекта, который последний раз нарисовали
 // в эту клетку окна, либо 0xFF, если спрайт переписывается каждый кадр
@@ -355,12 +353,11 @@ AC = 4
 //
 // Горячий цикл без указателей в памяти:
 //   BC = &work_cave[клетка]   HL = &shadow[слот]   DE = &screen_adresses[слот]
-// Пропуск: 44 такта/клетку (было ~312: три LHLD/SHLD на каждую).
-// 12 колонок развёрнуты, sw_blit сохраняет BC/DE/HL.
+// 11 колонок развёрнуты, шаг строки cave += 29 (40-11), sw_blit сохраняет BC/DE/HL.
 // ============================================================
 #define RENDER_DIRTY 1
 
-unsigned char shadow[120];
+unsigned char shadow[WIN_CELLS];
 
 // Shadow value per object code: 0xFF = "sprite re-pointed by sprites_anim
 // every frame -> always redraw", otherwise the code itself.
@@ -385,7 +382,7 @@ void invalidate_window(void)
 {
 #asm
             LXI  H,_shadow
-            MVI  B,120
+            MVI  B,88               ; WIN_CELLS
 iw_lp:      MVI  M,0ffh
             INX  H
             DCR  B
@@ -417,7 +414,7 @@ void show_window(void)
             MOV  C,L                ; BC = cave ptr
             LXI  D,_screen_adresses ; DE = screen address table
             LXI  H,_shadow          ; HL = shadow
-            MVI  A,10
+            MVI  A,8
             STA  sw_row
 sw_rowlp:
             ; --- timebase: one frame-pulse sample per row (see vsync_poll()
@@ -439,7 +436,7 @@ sw_rowlp:
             DCR  M
 svp_done:
             POP  H
-            ; ---- 12 columns, fully unrolled ----
+            ; ---- 11 columns, fully unrolled (WIN_W) ----
             LDAX B
             INX  B
             CMP  M
@@ -549,19 +546,9 @@ sw_k11:
             INX  H
             INX  D
             INX  D
-
-            LDAX B
-            INX  B
-            CMP  M
-            JZ   sw_k12
-            CALL sw_blit
-sw_k12:
-            INX  H
-            INX  D
-            INX  D
-            ; ---- next map row: cave ptr += 40-12 ----
+            ; ---- next map row: cave ptr += 40-11 = 29 ----
             MOV  A,C
-            ADI  28
+            ADI  29
             MOV  C,A
             JNC  sw_nocy
             INR  B
@@ -1163,24 +1150,23 @@ rights:
             
            
 */
-void get_sprites_adresses_from_mass(void)// ��������� ������ �� ���������� ������������ �������� � ������ ��������
+void get_sprites_adresses_from_mass(void)
 {
  uint8_t n,j,p;
  p=0;
  lab_pointer = 0;
  
- lab_y = 3;  // HUD at y=0 clears 2 rows (0-1); field starts at row 3
- for (j = 0;j<11;j++)
+ lab_y = FIELD_Y;
+ for (j = 0; j < WIN_H; j++)
  {
-    lab_x = 2;  // shifted 2 char columns right (was 0)
-    for(n=0;n<12;n++)
+    lab_x = WIN_LAB_X;
+    for (n = 0; n < WIN_W; n++)
     {
-     screen_adresses[p++] = charAddr(lab_x, lab_y); // ������� ������� ������� ������� �������
-     lab_x+=6;
+     screen_adresses[p++] = charAddr(lab_x, lab_y);
+     lab_x += 6;
     }
-    lab_y+=4;
+    lab_y += 4;
  }
  restore = 0;
-
 }
 

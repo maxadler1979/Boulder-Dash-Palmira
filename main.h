@@ -79,6 +79,9 @@
 #define VSYNC_HZ       59
 #define TICKS_PER_SEC  8
 
+#define NUM_CAVES   20   /* A–T; Q–T = bonus intermissions */
+#define MENU_CAVES  16   /* в меню выбираются только A–P */
+
 extern unsigned char vs_left;
 extern unsigned char vs_prev;
 void vsync_poll(void);
@@ -88,8 +91,6 @@ void waitVSync(void);
 
 /* --- Видео / текст / спрайты --- */
 extern uint8_t* radio86rkVideoMem;
-extern unsigned char bitmap[];
-extern unsigned char *bmpadr;
 extern unsigned char *spr_addr;
 extern unsigned char *xy_addr;
 extern int sm_y[];
@@ -99,12 +100,10 @@ extern unsigned char *Digits[];
 void clrscr(void);
 void create_table(void);
 void put_sprite(char x, char y, uint8_t* sprite);
-void put_bitmap(void);
 void put_char(uchar x, uchar y, uchar s);
 void put_text(uchar x, uchar y, uchar* text, uchar len);
 void put_dec(uchar x, uchar y, uint16_t val);
 uchar* charAddr(uchar x, uchar y);
-void window_fill(char x, char y, char len_x, char len_y);
 void fill_bd_window(void);
 
 /* --- Ввод / PRNG --- */
@@ -189,6 +188,7 @@ extern unsigned char hud_dirty;
 #define HUD_DIRTY_LIVES    0x04
 #define HUD_DIRTY_ALL      0xFF
 void draw_hud(void);
+void draw_pause_hud(void);
 void update_hud(void);
 
 /* --- Очки (C64: шесть десятичных цифр, ExtraLife каждые 500) --- */

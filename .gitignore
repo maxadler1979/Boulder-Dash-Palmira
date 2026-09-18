@@ -6,6 +6,11 @@ zcc_opt.def
 *.o
 *.obj
 blddash.rkl
+blddash.rkr
+blddash.rk
+blddash.rka
+tbl.bin
+*.rar
 
 # IDE и бэкапы
 .idea/

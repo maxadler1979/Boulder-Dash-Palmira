@@ -383,7 +383,7 @@ const char space[14] = {3,4,
     0x00, 0x00, 0x00, 0x00, 
     0x00, 0x00, 0x00, 0x00
 };
-uint16_t bd_music_1ch[256] = {10339,8155,6880,5169,9162,7738,6880,4581,6468,5768,5169,4319,5768,3056,5444,3440,
+uint16_t bd_music_1ch[128] = {10339,8155,6880,5169,9162,7738,6880,4581,6468,5768,5169,4319,5768,3056,5444,3440,
 							  10339,5169,13760,9162,11536,4581,9162,11536,10339,5169,13760,9162,6468,2584,5169,6468,
 						      11536,5768,15476,10339,7263,2884,5768,7263,13760,5444,12226,5169,7738,7738, 3869,7738,
 						      5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,
@@ -392,7 +392,7 @@ uint16_t bd_music_1ch[256] = {10339,8155,6880,5169,9162,7738,6880,4581,6468,5768
 						      5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5169,5768,5768,5768,5768,
 						      4077,5169,6880,8155,4581,5768,7738,11536,4077,5169,6880,8155,4581,5768,7738,11536
 };
-uint16_t bd_music_2ch[256] = {20678,13760,10339,8639,23073,12226,11536,7738,25874,25874,12937,25874,11536,3869,10889,4319,
+uint16_t bd_music_2ch[128] = {20678,13760,10339,8639,23073,12226,11536,7738,25874,25874,12937,25874,11536,3869,10889,4319,
 							  20678,20678,20678,20678,23073,23073,23073,23073,20678,20678,20678,20678,12937,12937,12937,12937,
 							  23073,23073,23073,23073,14526,14526,14526,14526,27520,6880,27520,6880,30953,30953,20678,20678,
 							  20678,20678,20678,20678,10339,10339,20678,20678,23073,23073,23073,23073,11536,11536,23073,23073,
@@ -860,9 +860,6 @@ static void title_draw_full(void) {
         put_char(70, t + 1, 63);
     }
     fill_bd_window();
-    show_big_dig(28,34,2025);
-    printf_letters(4,28,  brand_decode(brand_palmira_enc, 17, BRAND_KEY_PALMIRA));
-    printf_letters(20,31, brand_decode(brand_software_enc, 9, BRAND_KEY_SOFTWARE));
     x = 8;
     put_sprite(x,4, B_let);
     put_sprite(x+=10,6, o_let);
@@ -876,6 +873,11 @@ static void title_draw_full(void) {
     put_sprite(x+=10,16, a_let);
     put_sprite(x+=8,16, s_let);
     put_sprite(x+=8,16, h_let);
+    /* авторы (как на РК); спрайты только A–Z — без (C)/цифр */
+    printf_letters(5, 23, "LIEPA AND GRAY");
+    show_big_dig(28,34,2026);
+    printf_letters(4,28,  brand_decode(brand_palmira_enc, 17, BRAND_KEY_PALMIRA));
+    printf_letters(20,31, brand_decode(brand_software_enc, 9, BRAND_KEY_SOFTWARE));
     printf_letters(14,37, "PRESS SPACE");
 }
 
@@ -957,8 +959,8 @@ static unsigned char title_music_loop(unsigned char phase) {
         if (s == 128) return 0;  // music cycle done → demo
 
         if (phase == 1) {
-            // Cave selection: UP/DOWN change cave
-            if (!(key_scan(0xfd) & 0x20)) { if (cave < 14) cave++; }
+            // Cave selection: UP/DOWN — только A–P (бонусы Q–T не выбираются)
+            if (!(key_scan(0xfd) & 0x20)) { if (cave < 15) cave++; }
             if (!(key_scan(0xfd) & 0x80)) { if (cave > 0)  cave--; }
             put_sprite(46, 31, Letters[cave]);
         }
@@ -1717,41 +1719,6 @@ void show_title(void)
 }
 
 
-
-//                  8       6       4           2
-void window_fill(char x,char y,char len_x, char len_y)
-{
-#asm
-        
-        
-        LXI H,0A788H
-        MVI A,67
-        LXI D, 79
-        CMA
-        ADD E
-        MOV E,A
-        
-        MVI A,23
-        MOV C,A
-        LDA _symbol
-X_FILL: MVI B,67; � B ����� �� �
-               
-DRAW_X: mov a,m
-        cpi 64
-        jc step_up
-        LDA _symbol
-        MOV M,A
-step_up:INX H
-        DCR B
-        JNZ DRAW_X
-        DCR C
-        JZ EXIT_W
-        DAD D
-        JMP X_FILL
-
-EXIT_W:
-#endasm
-}
 
 void fill_bd_window(void)
 {

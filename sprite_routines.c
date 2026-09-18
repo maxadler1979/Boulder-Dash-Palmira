@@ -99,37 +99,4 @@ stacksave:
 #endasm
 }
 
-void put_bitmap(void)
-{
-#asm
-            LXI  H,0
-            DAD  SP
-            SHLD  stacksave
-  mvi d,40
-  lhld _bmpadr;
-  SPHL ;  ˜˜˜˜˜˜˜˜˜ ˜˜˜˜ ˜˜˜˜˜ ˜ ˜˜˜˜ (HL ->SP) ˜˜ ˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜ ˜˜˜˜˜
-  LHLD VADDR2; ˜˜˜˜˜˜˜˜˜ ˜ HL ˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜
- ;˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜ ˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜˜˜, ˜ HL ˜˜˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ ˜ DE ˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜
-strt_draw2:
-        mvi a,39
-vi2:
-        POP  B   ; 
-        MOV  M,C ;1
-        INX  H
-        MOV  M,B ;2
-        INX  H
-        DCR  A;
-        JNZ  vi2;
-        dcr D
-        JNZ strt_draw2
-;˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜ ˜ ˜˜˜˜˜
-  LHLD  stacksave
-  SPHL
-  RET
-VADDR2:
-    defw  0A69Ch
-#endasm
-}
-
-
 

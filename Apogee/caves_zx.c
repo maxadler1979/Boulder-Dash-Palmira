@@ -478,4 +478,3 @@ unsigned char *CaveZxObj[20] = {
   CaveBonusSZx,
   CaveBonusTZx,
 };
-

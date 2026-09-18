@@ -42,6 +42,9 @@ extern const char muar2[];
 extern const char muar3[];
 extern const char muar4[];
 extern const char stay[];
+extern const unsigned char bd_logo[];
+#define BD_LOGO_W 28
+#define BD_LOGO_H 4
 
 extern unsigned char *DimondAnim[];
 extern unsigned char *ButterAnim[];

@@ -122,7 +122,7 @@ static const cave_params_t cave_params[20] = {
 unsigned char score_digits[6];
 unsigned char last_score[6];      // score of the last finished game
 unsigned char high_score[6];      // best of this session (C64: HighScoreChars)
-unsigned char score_flash;        // >0 = HUD shows the score, not the diamonds
+unsigned char score_flash;        /* legacy; score always on HUD now */
 unsigned char extra_life_fx;      // >0 = empty tile sparkles (C64 ExtraLifeFXCounter)
 unsigned char diamond_value;      // points the next diamond is worth
 unsigned char diamond_extra;      // what it becomes once the quota is met
@@ -165,8 +165,7 @@ void score_add(unsigned char v)
     if (old_th != score_digits[2]) extra_life();
     if (old_hu == 4 && score_digits[3] != 4) extra_life();
 
-    score_flash = SCORE_SHOW_TICKS;      // HUD: show the score for a moment
-    hud_dirty |= HUD_DIRTY_DIAMONDS;
+    hud_dirty |= HUD_DIRTY_SCORE;
 }
 
 void score_reset(void)
@@ -262,7 +261,7 @@ void init_cave_objects(char cav)
 // ============================================================
 char get_rockford_input(void)
 {
-    char kb, dir = 0xFF;
+    char dir = 0xFF;
     fire_pressed = 0;                       // default: not pressed
 
     if (is_demo_mode) {
@@ -288,14 +287,16 @@ char get_rockford_input(void)
         return demo_cur_dir;
     }
 
-    kb = key_scan(0xfd);
-    if      (!(kb & 0x20)) dir = 0;       // up    = bit 5 low
-    else if (!(kb & 0x80)) dir = 2;       // down  = bit 7 low
-    else if (!(kb & 0x10)) dir = 3;       // left  = bit 4 low
-    else if (!(kb & 0x40)) dir = 1;       // right = bit 6 low
-    if (!(kb & 0x04)) fire_pressed = 1;   // enter = bit 2 low (same row as arrows!)
+    kb = key_scan(0xfd);                  /* PA1: стрелки и ВК */
+    if      (!(kb & 0x20)) dir = 0;       /* вверх  PB5 */
+    else if (!(kb & 0x80)) dir = 2;       /* вниз   PB7 */
+    else if (!(kb & 0x10)) dir = 3;       /* влево  PB4 */
+    else if (!(kb & 0x40)) dir = 1;       /* вправо PB6 */
+    if (!(kb & 0x04)) fire_pressed = 1;   /* ВК     PB2 */
+    kb = key_scan(0x7f);                  /* PA7: пробел PB7 */
+    if (!(kb & 0x80)) fire_pressed = 1;
     kb = key_scan(0x7e);
-    if (!(kb & 0x80)) fire_pressed = 1;   // space = bit 7 low
+    if (!(kb & 0x80)) fire_pressed = 1;
     return dir;
 }
 
@@ -307,7 +308,7 @@ void process_rockford(void)
 
     if (rockford_anim) {
         rockford_anim++;
-        if (rockford_anim > 6) rockford_anim = 0;
+        if (rockford_anim > 4) rockford_anim = 0;
     }
 
     // If Rockford is dead (cell destroyed by explosion), just return.
@@ -1690,7 +1691,7 @@ pp_rowlp:
             ;     pulses that pass *while* the scan runs are counted (see
             ;     vsync_poll() in main.c).  Only A and flags are touched. ---
             PUSH H
-            LXI  H,0c001h
+            LXI  H,0ef01h
             MOV  A,M
             ANI  20h
             LXI  H,_vs_prev
@@ -2157,12 +2158,12 @@ void game_tick_step(void)
 // ============================================================
 void camera_follow_rockford(void)
 {
-    char tx = rockford_x - 6;
-    char ty = rockford_y - 5;
+    char tx = rockford_x - (WIN_W / 2);
+    char ty = rockford_y - (WIN_H / 2);
     if (tx < 0) tx = 0;
-    if (tx > 28) tx = 28;
+    if (tx > MAP_X_MAX) tx = MAP_X_MAX;
     if (ty < 0) ty = 0;
-    if (ty > 12) ty = 12;
+    if (ty > MAP_Y_MAX) ty = MAP_Y_MAX;
     map_x = tx;
     map_y = ty;
 }

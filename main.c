@@ -10,10 +10,19 @@ uchar* TM9 =  (uchar*)0xCE00;
 uchar* RU10 = (uchar*)0xd800;
 
 uint8_t* radio86rkVideoMem = (uchar*)(SCREEN);
-unsigned char *bmpadr;
-unsigned char bitmap[0xccc+78+78];
 
 char cave;
+
+/* C64 LevelSequenceAndBonusLevelStatusArray → next cave (0=A … 19=T).
+ * A–D → Q → E–H → R → I–L → S → M–P → T → A */
+static const unsigned char cave_next[20] = {
+    1, 2, 3, 16,    /* A B C D→Q */
+    5, 6, 7, 17,    /* E F G H→R */
+    9, 10, 11, 18,  /* I J K L→S */
+    13, 14, 15, 19, /* M N O P→T */
+    4, 8, 12, 0     /* Q→E R→I S→M T→A */
+};
+
 uint16_t GetRandFromSeed(uint16_t randVal)
 {
 	/* 16-битный Galois LFSR, примитивный полином x^16+x^15+x^13+x^4+1
@@ -152,55 +161,17 @@ void screen_setup(uint16_t adr,uint16_t length)
   VT57[5] = (uint16_t)((length)-1); //
   VT57[5] = 0x40 | (uint16_t)(((length)-1)>>8); //
   VT57[8] = 0xA4; //
-
+  /* Курсор ВГ75 за экран: Load Cursor → (7Fh, 7Fh). */
+  VG75[1] = 0x80;
+  VG75[0] = 0x7f;
+  VG75[0] = 0x7f;
 }
 
-uint8_t key_scan(uint8_t row) // ���������� ��� ������� �������
+uint8_t key_scan(uint8_t row)
 {
-    uchar z = 0;
     vv55[0] = row;
     return vv55[1];
 }
-
- uint8_t GetInput()
-{
-  uint8_t kb;
-  kb=0xff;
-
-//dig=key_scan(0xfb);//fb - 1(253)2(251)3(247)4(239)5(223)6(191)7(127)
- kb=key_scan(0x7e); //7e = f1 f2 f3 f4 f5 space y z x
-   if (!(kb & 0x80)) //space
-    {
-        return KEY_space;
-    }
-
- kb=key_scan(0xfd);
-   if (!(kb & 0x04))  // 251 -> bit 2
-    {
-       return KEY_enter;
-    }
-
-   if (!(kb & 0x20))  // 223 -> bit 5
-    {
-
-        return KEY_up;
-    }
-   if (!(kb & 0x80))  // 127 -> bit 7
-    {
-       return KEY_down;
-    }
-   if (!(kb & 0x10))  // 239 -> bit 4
-    {
-      return KEY_left;
-    }
-   if (!(kb & 0x40))  // 191 -> bit 6
-    {
-        return KEY_right;
-    }
-	return kb;
-
-}
-
 
 void clear_chargen_ram(void)
 {
@@ -253,49 +224,9 @@ for (r = 0; r < 768; r += 12) // 64 символа по 12 байт (768 бай�
 }
 
 
-void pause(void)
-{
-int a=400;
-while(a>0) a--;
-}
-
-
 char map_x,map_y;
 unsigned char *spr_addr;
 unsigned char *xy_addr;
-
-
-void stick_map(void)
-{
-uint8_t kb;
-kb = key_scan(0xfd);
-
-
-   if (!(kb & 0x20))  // 223 -> bit 5
-    {
-     move_camera_up();
-
-        //KEY_up;
-    }
-   if (!(kb & 0x80))  // 127 -> bit 7
-    {
-     move_camera_down();
-
-       //KEY_down;
-    }
-   if (!(kb & 0x10))  // 239 -> bit 4
-    {
-     move_camera_left();
-
-      //KEY_left;
-    }
-   if (!(kb & 0x40))  // 191 -> bit 6
-    {
-      move_camera_right();
-
-        //KEY_right;
-    }
-}
 
 
 // ============================================================
@@ -484,6 +415,12 @@ void draw_hud(void) {
     hud_dirty = 0;
 }
 
+/* Оверлей паузы на строке HUD (P = PA6/PB0). */
+void draw_pause_hud(void) {
+    clear_sprite_row(2, 0, 76);
+    printf_letters(10, 0, "PAUSE - PRESS P");
+}
+
 // ============================================================
 // update_hud: incremental redraw — only dirty regions.
 // ============================================================
@@ -617,15 +554,20 @@ while(1)
  }
 
  if (level_complete) {
- 	// Level finished — advance to next cave (C64: PostRunCaveActions -> next level)
+ 	// Level finished — C64 NextCave: A-D→Q→E-H→R→I-L→S→M-P→T→A
  	score_time_bonus();   // C64 CaveComplete: 1 point per second left on the clock
  	do_curtain();
- 	cave++;
- 	if (cave >= 20) cave = 0;
+ 	cave = (char)cave_next[(unsigned char)cave];
  	continue;
  }
 
  if (exit_cave_flag) {
+ 	/* C64 PerformCaveExitAction: бонус Q–T — NextCave без LoseLife */
+ 	if ((unsigned char)cave >= 16) {
+ 		do_curtain();
+ 		cave = (char)cave_next[(unsigned char)cave];
+ 		continue;
+ 	}
  	// Rockford died or time ran out — lose a life (C64: LoseLife)
  	lose_life();
  	do_curtain();
